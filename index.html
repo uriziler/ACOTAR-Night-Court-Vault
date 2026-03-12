@@ -695,10 +695,9 @@
 
         function startStep3() {
             STATE.step = 3;
-            // Upravíme arrowLeft vizuálně, nebo jen nedáme žádnou na 3. krok
-            ui.statusText.innerHTML = "Ještě jeden pohyb. Skloň Sifon.";
+            ui.statusText.innerHTML = "Ještě jeden pohyb. Otoč Sifon znovu doprava.";
             clearArrows();
-            // Můžeme ukázat šipku dolů přidáním rotace v CSS, nebo jen nenápadně nechat
+            ui.arrowRight.classList.add('show-arrow');
         }
 
         function completeStep3() {
@@ -832,11 +831,8 @@
                     setHoldProgress(0);
                 }
             } else if (STATE.step === 3) {
-                // Step 3: Skloň / Tilt forward/backward (using beta)
-                // Beta is pitch in degrees [-180, 180]. 
-                // Skonit dopředu typicky znamená vyšší betu > 60 nebo < -60, záleží na počáteční kalibraci. 
-                // Dáme beta < -40 nabo beta > 80 jako trigger
-                if (beta > 80 || beta < -40) {
+                // Step 3: Znovu doprava / Tilt right > 80 deg
+                if (effectiveGamma > 80) {
                     if (STATE.holdStartTime === 0) STATE.holdStartTime = now;
 
                     const heldFor = now - STATE.holdStartTime;
