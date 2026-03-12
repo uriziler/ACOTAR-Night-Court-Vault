@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ACOTAR Night Court Vault</title>
+    <!-- Google Fonts CDNs -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0A0D1A;
+            --gold: #C9A84C;
+            --gold-bright: #F5D77D;
+            --steel: #1a1a2e;
+            --steel-dark: #0f0f1c;
+            --text-color: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Cinzel', serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Starfield Background */
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background-image: 
+                radial-gradient(1px 1px at 10% 20%, white 100%, transparent),
+                radial-gradient(1px 1px at 30% 80%, white 100%, transparent),
+                radial-gradient(1px 1px at 80% 40%, rgba(255,255,255,0.8) 100%, transparent),
+                radial-gradient(2px 2px at 50% 50%, rgba(201, 168, 76, 0.5) 100%, transparent),
+                radial-gradient(1px 1px at 90% 10%, white 100%, transparent),
+                radial-gradient(1.5px 1.5px at 15% 60%, rgba(255,255,255,0.9) 100%, transparent),
+                radial-gradient(1px 1px at 70% 90%, white 100%, transparent);
+            background-size: 200px 200px;
+            opacity: 0.6;
+            animation: twinkle 10s linear infinite;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.4; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0.4; }
+        }
+
+        /* Intro Screen */
+        #intro-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(10, 13, 26, 0.95);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            transition: opacity 0.5s ease-out;
+        }
+
+        #intro-screen h1 {
+            color: var(--gold);
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(201, 168, 76, 0.5);
+        }
+
+        #start-btn {
+            background: transparent;
+            color: var(--gold);
+            border: 2px solid var(--gold);
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 0 15px rgba(201, 168, 76, 0.2), inset 0 0 10px rgba(201, 168, 76, 0.1);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #start-btn:active {
+            background: rgba(201, 168, 76, 0.1);
+            box-shadow: 0 0 25px rgba(201, 168, 76, 0.5), inset 0 0 15px rgba(201, 168, 76, 0.3);
+            transform: scale(0.98);
+        }
+
+        #error-msg {
+            color: #ff6b6b;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        /* Main Game Area */
+        #game-area {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            height: 100%;
+            width: 100%;
+            padding: 40px 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease-in;
+        }
+
+        #game-area.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .status-text {
+            color: var(--gold);
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(201, 168, 76, 0.4);
+            height: 60px; /* fixed height to prevent jumping */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 1px;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        /* Vault Door */
+        .vault-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 20px 0;
+            perspective: 1000px;
+        }
+
+        .vault-door {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, var(--steel) 0%, var(--steel-dark) 80%);
+            border: 8px solid var(--steel-dark);
+            box-shadow: 
+                0 0 30px rgba(0,0,0,0.8),
+                inset 0 0 20px rgba(0,0,0,0.9),
+                0 0 0 4px var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+            z-index: 2;
+        }
+
+        /* Inner Ring Details */
+        .vault-inner-ring {
+            width: 70%;
+            height: 70%;
+            border-radius: 50%;
+            border: 2px dashed var(--gold);
+            opacity: 0.4;
+            position: absolute;
+        }
+        
+        .vault-center {
+            width: 30%;
+            height: 30%;
+            border-radius: 50%;
+            background: var(--gold);
+            box-shadow: 0 0 15px var(--gold), inset 0 0 10px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .vault-center::after {
+            content: '';
+            width: 50%;
+            height: 50%;
+            border-radius: 50%;
+            background: var(--bg-color);
+        }
+
+        /* Lock Indicators (Dots around vault) */
+        .lock-indicators {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            width: calc(100% + 30px);
+            height: calc(100% + 30px);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .indicator {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background-color: var(--steel-dark);
+            border: 2px solid #333;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.4s ease;
+            box-shadow: 0 0 5px rgba(0,0,0,0.8);
+        }
+
+        .indicator.active {
+            background-color: var(--gold-bright);
+            border-color: var(--gold);
+            box-shadow: 0 0 15px var(--gold-bright), 0 0 30px var(--gold);
+        }
+
+        /* Position indicators at top right, top left, bottom */
+        #ind-1 { top: 15%; left: 85%; }
+        #ind-2 { top: 15%; left: 15%; }
+        #ind-3 { top: 90%; left: 50%; }
+
+        /* Directional Arrow Hint */
+        .arrow-hint {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+        }
+
+        .arrow-hint svg {
+            width: 100%;
+            height: 100%;
+            fill: var(--gold);
+            filter: drop-shadow(0 0 5px var(--gold));
+        }
+
+        #arrow-right { top: 50%; right: -80px; transform: translateY(-50%); animation: bounceRight 1.5s infinite; }
+        #arrow-left { top: 50%; left: -80px; transform: translateY(-50%) rotate(180deg); animation: bounceLeft 1.5s infinite; }
+        #arrow-shake { top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0; }
+        
+        .show-arrow { opacity: 0.7 !important; }
+
+        @keyframes bounceRight {
+            0%, 100% { transform: translateY(-50%) translateX(0); }
+            50% { transform: translateY(-50%) translateX(10px); }
+        }
+
+        @keyframes bounceLeft {
+            0%, 100% { transform: translateY(-50%) rotate(180deg) translateX(0); }
+            50% { transform: translateY(-50%) rotate(180deg) translateX(10px); }
+        }
+
+        @keyframes shakeHint {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            15% { transform: translate(-50%, -50%) rotate(-15deg); }
+            30% { transform: translate(-50%, -50%) rotate(15deg); }
+            45% { transform: translate(-50%, -50%) rotate(-15deg); }
+            60% { transform: translate(-50%, -50%) rotate(15deg); }
+            75% { transform: translate(-50%, -50%) rotate(-15deg); }
+        }
+
+        .anim-shake { animation: shakeHint 1.5s infinite; }
+
+        .progress-text {
+            color: rgba(224, 224, 224, 0.7);
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            margin-top: 10px;
+        }
+
+        /* Success Animation Classes */
+        .gold-flash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--gold-bright);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .flash-active {
+            animation: flashAnim 3s forwards;
+        }
+
+        @keyframes flashAnim {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            40% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .vault-door.open-split {
+            /* Simulate vault opening */
+            transform-origin: left center;
+            animation: openVault 2.5s forwards ease-in-out;
+            box-shadow: 0 0 50px var(--gold-bright), inset 0 0 20px rgba(0,0,0,0.9);
+            border-color: var(--gold-bright);
+        }
+
+        @keyframes openVault {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(-110deg); opacity: 0.5; }
+        }
+
+        /* Progress Circle for Steps */
+        .progress-ring {
+            position: absolute;
+            top: -24px;
+            left: -24px;
+            width: calc(100% + 48px);
+            height: calc(100% + 48px);
+            pointer-events: none;
+            z-index: 0;
+            transform: rotate(-90deg); /* Start at top */
+        }
+        
+        .progress-ring-circle {
+            fill: transparent;
+            stroke: var(--gold);
+            stroke-width: 4px;
+            stroke-dasharray: 1030; /* Approx path length for r=164 */
+            stroke-dashoffset: 1030;
+            transition: stroke-dashoffset 0.1s linear;
+            opacity: 0.5;
+            filter: drop-shadow(0 0 5px var(--gold));
+        }
+
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+
+    <div id="intro-screen">
+        <h1>Trezor Nočního dvora</h1>
+        <p style="color: #aaa; margin-bottom: 30px; font-size: 0.9rem;">Pro přístup vyžaduje gyroskop a senzory pohybu.</p>
+        <button id="start-btn">Aktivovat Sifon</button>
+        <p id="error-msg"></p>
+    </div>
+
+    <div id="game-area">
+        <div class="status-text" id="status-text">Trezor Nočního dvora.<br>Odemkni jej.</div>
+
+        <div class="vault-container">
+            <!-- Progress Ring SVG -->
+            <svg class="progress-ring" viewBox="0 0 340 340">
+                <circle class="progress-ring-circle" cx="170" cy="170" r="160"></circle>
+            </svg>
+
+            <!-- Arrows -->
+            <div class="arrow-hint" id="arrow-right">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="arrow-hint" id="arrow-left">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="arrow-hint" id="arrow-shake">
+                <!-- Phone icon for shake hint -->
+                <svg viewBox="0 0 24 24" style="fill:none;stroke:var(--gold);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            </div>
+
+            <div class="lock-indicators">
+                <div class="indicator" id="ind-1"></div>
+                <div class="indicator" id="ind-2"></div>
+                <div class="indicator" id="ind-3"></div>
+            </div>
+
+            <div class="vault-door" id="vault-door">
+                <div class="vault-inner-ring"></div>
+                <div class="vault-center"></div>
+            </div>
+        </div>
+
+        <div class="progress-text" id="progress-text">0 / III</div>
+    </div>
+
+    <div class="gold-flash" id="gold-flash"></div>
+
+    <script>
+        // CONFIGURATION
+        /* NO API KEYS - pure vanilla JS matching requirements */
+        const FINAL_VIDEO_URL = "https://example.com/placeholder-video"; // [URL_FINALNIHO_VIDEA] - Replace later
+        
+        // Game State
+        const STATE = {
+            step: 0, // 0: Idle/Start, 1: Right, 2: Left, 3: Shake, 4: Done
+            holdStartTime: 0,
+            shakeCount: 0,
+            lastShakeTime: 0,
+            vaultRotation: 0,
+            isActive: false
+        };
+
+        const TARGET_HOLD_MS = 800;
+        const TARGET_SHAKES = 3;
+        const SHAKE_COOLDOWN_MS = 500;
+        
+        // DOM Elements
+        const ui = {
+            intro: document.getElementById('intro-screen'),
+            startBtn: document.getElementById('start-btn'),
+            errorMsg: document.getElementById('error-msg'),
+            game: document.getElementById('game-area'),
+            statusText: document.getElementById('status-text'),
+            progressText: document.getElementById('progress-text'),
+            vaultDoor: document.getElementById('vault-door'),
+            ind1: document.getElementById('ind-1'),
+            ind2: document.getElementById('ind-2'),
+            ind3: document.getElementById('ind-3'),
+            arrowRight: document.getElementById('arrow-right'),
+            arrowLeft: document.getElementById('arrow-left'),
+            arrowShake: document.getElementById('arrow-shake'),
+            flash: document.getElementById('gold-flash'),
+            progressCircle: document.querySelector('.progress-ring-circle')
+        };
+
+        const circleCircumference = 2 * Math.PI * 160; // ~1005
+        ui.progressCircle.style.strokeDasharray = `${circleCircumference} ${circleCircumference}`;
+        ui.progressCircle.style.strokeDashoffset = circleCircumference;
+
+        // AudioContext for synthesized sounds
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Play metallic click: short sine burst, 200Hz, 80ms
+        function playClickSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+            // Quick metallic envelope
+            gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.08);
+        }
+
+        // Play victory tone: rising tone 300Hz→600Hz, 600ms
+        function playVictorySound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.6);
+            
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
+            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.6);
+
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.6);
+        }
+
+        // Haptic Feedback Helper
+        function triggerHaptic(pattern) {
+            if (navigator.vibrate) {
+                navigator.vibrate(pattern);
+            }
+        }
+
+        // Update UI Progress visualization
+        function setHoldProgress(percent) {
+            const offset = circleCircumference - (percent / 100) * circleCircumference;
+            ui.progressCircle.style.strokeDashoffset = offset;
+        }
+
+        // Hide all arrows
+        function clearArrows() {
+            ui.arrowRight.classList.remove('show-arrow');
+            ui.arrowLeft.classList.remove('show-arrow');
+            ui.arrowShake.classList.remove('show-arrow', 'anim-shake');
+        }
+
+        // Rotate vault door
+        function addVaultRotation(deg) {
+            STATE.vaultRotation += deg;
+            ui.vaultDoor.style.transform = `rotate(${STATE.vaultRotation}deg)`;
+        }
+
+        // --- Game Logic Sequences ---
+
+        function startStep1() {
+            STATE.step = 1;
+            ui.statusText.innerHTML = "Otoč Sifon doprava.";
+            ui.progressText.innerHTML = "0 / III";
+            clearArrows();
+            ui.arrowRight.classList.add('show-arrow');
+        }
+
+        function completeStep1() {
+            STATE.isActive = false; // pause processing temporarily
+            playClickSound();
+            triggerHaptic([80, 40, 160]);
+            ui.ind1.classList.add('active');
+            addVaultRotation(30);
+            
+            ui.statusText.innerHTML = "První zámek odemčen.";
+            ui.progressText.innerHTML = "I / III";
+            clearArrows();
+            setHoldProgress(0);
+
+            setTimeout(() => {
+                STATE.isActive = true;
+                startStep2();
+            }, 1500);
+        }
+
+        function startStep2() {
+            STATE.step = 2;
+            ui.statusText.innerHTML = "Otoč Sifon doleva.";
+            clearArrows();
+            ui.arrowLeft.classList.add('show-arrow');
+        }
+
+        function completeStep2() {
+            STATE.isActive = false;
+            playClickSound();
+            triggerHaptic([80, 40, 160]);
+            ui.ind2.classList.add('active');
+            addVaultRotation(-60); // visually turn back the other way
+            
+            ui.statusText.innerHTML = "Druhý zámek odemčen.";
+            ui.progressText.innerHTML = "II / III";
+            clearArrows();
+            setHoldProgress(0);
+
+            setTimeout(() => {
+                STATE.isActive = true;
+                startStep3();
+            }, 1500);
+        }
+
+        function startStep3() {
+            STATE.step = 3;
+            STATE.shakeCount = 0;
+            ui.statusText.innerHTML = "Zatřes Sifonem.";
+            clearArrows();
+            ui.arrowShake.classList.add('show-arrow', 'anim-shake');
+        }
+
+        function completeStep3() {
+            STATE.isActive = false;
+            STATE.step = 4;
+            playClickSound();
+            triggerHaptic([80, 40, 160]);
+            ui.ind3.classList.add('active');
+            addVaultRotation(30); // center it back
+            
+            ui.statusText.innerHTML = "Třetí zámek odemčen.";
+            ui.progressText.innerHTML = "III / III";
+            clearArrows();
+            setHoldProgress(0);
+
+            setTimeout(() => {
+                vaultOpenSequence();
+            }, 1000);
+        }
+
+        function vaultOpenSequence() {
+            ui.statusText.innerHTML = "Trezor se otevírá...";
+            playVictorySound();
+            triggerHaptic([200, 100, 200, 100, 400]);
+            
+            // Visuals
+            ui.vaultDoor.classList.add('open-split');
+            
+            setTimeout(() => {
+                ui.flash.classList.add('flash-active');
+                ui.statusText.innerHTML = "Vítej v Nočním dvoře.";
+                
+                // Final Redirect after 3s of success message
+                setTimeout(() => {
+                    window.location.href = FINAL_VIDEO_URL;
+                }, 3000);
+                
+            }, 1000);
+        }
+
+
+        // --- Sensor Event Handlers ---
+
+        function handleOrientation(event) {
+            if (!STATE.isActive) return;
+            let gamma = event.gamma; // In degree in the range [-90,90), right is positive
+            let beta = event.beta;
+            let absolute = event.absolute;
+            
+            // iOS might return null if permissions denied or not available
+            if (gamma === null) return;
+            
+            // Fix alpha/beta/gamma edge case where flipping the phone causes gamma to reverse.
+            // Simplified handling for the specific "tilt 100°" which technically
+            // means going beyond 90. When going past 90, gamma flips sign and beta changes sign.
+            // For a right tilt > 90, gamma becomes negative and beta becomes negative (if portrait).
+            // To simplify, we calculate a continuous angle or just check a threshold.
+
+            // A robust way to check "tilted fully right/left" without complex math:
+            // Since standard gamma is [-90, 90], we can check if it exceeds bounds, but browsers
+            // might implement different wrapping. Let's use a simpler check:
+            // Right is normally gamma > 0. If it goes past 90, some browsers return large negative numbers 
+            // along with beta flipping. We will check a high threshold (e.g., 75+ degrees) or wrapping.
+            
+            let effectiveGamma = gamma;
+            if (beta < 0) {
+                // Device is somewhat upside down, gamma might be inverted
+                // This is a naive heuristic for basic game usage.
+                if (gamma > 0) effectiveGamma = 180 - gamma;
+                if (gamma < 0) effectiveGamma = -180 - gamma;
+            }
+
+            const now = Date.now();
+
+            if (STATE.step === 1) {
+                // Step 1: Tilt right > 80 deg
+                if (effectiveGamma > 80) { 
+                    if (STATE.holdStartTime === 0) STATE.holdStartTime = now;
+                    
+                    const heldFor = now - STATE.holdStartTime;
+                    const progress = Math.min((heldFor / TARGET_HOLD_MS) * 100, 100);
+                    setHoldProgress(progress);
+
+                    if (heldFor >= TARGET_HOLD_MS) {
+                        completeStep1();
+                    }
+                } else {
+                    STATE.holdStartTime = 0;
+                    setHoldProgress(0);
+                }
+            } 
+            else if (STATE.step === 2) {
+                // Step 2: Tilt left < -80 deg
+                if (effectiveGamma < -80) {
+                    if (STATE.holdStartTime === 0) STATE.holdStartTime = now;
+                    
+                    const heldFor = now - STATE.holdStartTime;
+                    const progress = Math.min((heldFor / TARGET_HOLD_MS) * 100, 100);
+                    setHoldProgress(progress);
+
+                    if (heldFor >= TARGET_HOLD_MS) {
+                        completeStep2();
+                    }
+                } else {
+                    STATE.holdStartTime = 0;
+                    setHoldProgress(0);
+                }
+            }
+        }
+
+        function handleMotion(event) {
+            if (!STATE.isActive || STATE.step !== 3) return;
+            
+            const acc = event.accelerationIncludingGravity;
+            if (!acc) return;
+
+            // Calculate magnitude of acceleration vector
+            const magnitude = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+            
+            // Typical gravity is ~9.8. Shake > 18 is significant force.
+            if (magnitude > 18) {
+                const now = Date.now();
+                if (now - STATE.lastShakeTime > SHAKE_COOLDOWN_MS) {
+                    STATE.shakeCount++;
+                    STATE.lastShakeTime = now;
+                    
+                    // Minor haptic/audio feedback for individual shake
+                    triggerHaptic([30]);
+                    
+                    // Show progress visually on the ring
+                    const progress = (STATE.shakeCount / TARGET_SHAKES) * 100;
+                    setHoldProgress(progress);
+
+                    if (STATE.shakeCount >= TARGET_SHAKES) {
+                        completeStep3();
+                    }
+                }
+            }
+        }
+
+
+        // --- Permissions and Init ---
+
+        function requestPermissions() {
+            initAudio();
+
+            // DeviceOrientation fallback checks
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                // iOS 13+ requires explicit permission
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            startPuzzle();
+                        } else {
+                            ui.errorMsg.style.display = 'block';
+                            ui.errorMsg.innerText = "Přístup odepřen. Povolte senzory v nastavení Safari/prohlížeče a zkuste to znovu.";
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                // non iOS 13+ devices
+                startPuzzle();
+            }
+        }
+
+        function startPuzzle() {
+            ui.intro.style.opacity = '0';
+            setTimeout(() => {
+                ui.intro.style.display = 'none';
+            }, 500);
+
+            ui.game.classList.add('active');
+            
+            window.addEventListener('deviceorientation', handleOrientation);
+            window.addEventListener('devicemotion', handleMotion);
+            
+            STATE.isActive = true;
+            
+            setTimeout(() => {
+                startStep1();
+            }, 1000);
+        }
+
+        ui.startBtn.addEventListener('click', requestPermissions);
+
+        // Pre-warm audio on early click anywhere if possible (fallback)
+        document.body.addEventListener('touchstart', () => {
+            if(!audioCtx) initAudio();
+        }, { once: true });
+
+    </script>
+</body>
+</html>
