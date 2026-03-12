@@ -257,7 +257,7 @@
             box-shadow: 0 0 15px var(--gold-bright), 0 0 30px var(--gold);
         }
 
-        /* Position indicators at top right, top left, bottom */
+        /* Position indicators evenly around the vault */
         #ind-1 {
             top: 15%;
             left: 85%;
@@ -269,8 +269,13 @@
         }
 
         #ind-3 {
-            top: 90%;
-            left: 50%;
+            top: 85%;
+            left: 15%;
+        }
+
+        #ind-4 {
+            top: 85%;
+            left: 85%;
         }
 
         /* Directional Arrow Hint */
@@ -507,6 +512,7 @@
                 <div class="indicator" id="ind-1"></div>
                 <div class="indicator" id="ind-2"></div>
                 <div class="indicator" id="ind-3"></div>
+                <div class="indicator" id="ind-4"></div>
             </div>
 
             <div class="vault-door" id="vault-door">
@@ -551,6 +557,7 @@
             ind1: document.getElementById('ind-1'),
             ind2: document.getElementById('ind-2'),
             ind3: document.getElementById('ind-3'), // added back ind3 because it was replaced by ind4 earlier!
+            ind4: document.getElementById('ind-4'), // Nově pro krok 4
             arrowRight: document.getElementById('arrow-right'),
             arrowLeft: document.getElementById('arrow-left'),
             arrowShake: document.getElementById('arrow-shake'),
@@ -731,6 +738,7 @@
             STATE.step = 5;
             playClickSound();
             triggerHaptic([80, 40, 160]);
+            ui.ind4.classList.add('active'); // Odemčení posledního zámku
             addVaultRotation(-15); // center it back
 
             ui.statusText.innerHTML = "Poslední zámek odemčen.";
